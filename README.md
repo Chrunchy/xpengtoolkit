@@ -8,6 +8,9 @@ Unofficial, reverse-engineered, and not affiliated with XPENG.
 the certificates, the two renewal apps, every entity and service, dashboard and
 automation examples, and what to check when it stops working.
 
+If this project is useful to you, you can
+[buy me a coffee](https://buymeacoffee.com/xpengtk).
+
 It runs headless - no phone and no official app - and with the two helper apps in
 [Unattended renewal](#unattended-renewal) it re-mints its own credentials before the
 session expires, so nothing has to be done by hand.
