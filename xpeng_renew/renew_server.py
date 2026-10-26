@@ -68,6 +68,23 @@ def _setting_int(name: str, default: int) -> int:
         return default
 
 
+def _setting_bool(name: str, default: bool) -> bool:
+    """A boolean option or environment variable.
+
+    The Supervisor passes a real boolean, while a standalone ``docker run -e``
+    passes a string, so both are accepted. ``false``, ``0`` and an empty string are
+    off; anything else non-empty is on, which matches the Supervisor's parsing.
+    """
+    raw = os.environ.get(name.upper())
+    if raw is None:
+        raw = OPTIONS.get(name)
+    if raw is None:
+        return default
+    if isinstance(raw, bool):
+        return raw
+    return str(raw).strip().lower() not in ("", "0", "false", "off", "no")
+
+
 #: The port the solver's own API listens on. Home Assistant serves the solver's
 #: sidebar panel on its own 8123, which is the address people copy.
 _SOLVER_API_PORT = 8080
@@ -143,6 +160,11 @@ RENEW_INTERVAL = _setting_int("renew_interval", 6000)
 # How often to ask Home Assistant whether the credentials are still good, so a session
 # that dies early is replaced on the next check rather than at the next tick.
 INVALID_POLL_INTERVAL = _setting_int("invalid_poll_interval", 300)
+#: Whether a successful renewal raises a persistent notification. A long-lived install
+#: renews roughly 24 times a day, so the success card is a per-install choice; failures
+#: still notify (after NOTIFY_AFTER consecutive attempts) either way. Default true keeps
+#: the behaviour every existing install had.
+NOTIFY_ON_SUCCESS = _setting_bool("notify_on_success", True)
 CORE_API = _setting("core_api", "http://supervisor/core/api")
 SUPERVISOR_TOKEN = os.environ.get("SUPERVISOR_TOKEN", "")
 
@@ -803,7 +825,8 @@ def _record_result(result: dict, kind: str = "renew") -> None:
     if result["ok"]:
         STATE["consecutive_failures"] = 0
         _log("%s ok in %sms" % (kind, result.get("ms")))
-        _notify("XPENG credentials renewed", "A fresh token pair was imported.")
+        if NOTIFY_ON_SUCCESS:
+            _notify("XPENG credentials renewed", "A fresh token pair was imported.")
         return
     STATE["failures"] += 1
     STATE["consecutive_failures"] += 1
