@@ -19,6 +19,10 @@ __pycache__/
 .venv/
 venv/
 
+# Compose environment for the standalone companions: it holds the account
+# credentials and the Home Assistant token.
+.env
+
 # OS / editors
 .DS_Store
 .idea/
